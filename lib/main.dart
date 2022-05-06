@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Scouting App',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'Scouting Home Page'),
     );
   }
 }
@@ -60,6 +60,13 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  static const List<Question> _questions = [
+    Question(type: QuestionType.kNumber, label: "Team Number", options: []),
+    Question(type: QuestionType.kNumber, label: "Points Scored", options: []),
+    Question(type: QuestionType.kString, label: "Question 3", options: []),
+    Question(type: QuestionType.kString, label: "Question 4", options: []),
+    Question(type: QuestionType.kString, label: "Question 6", options: []),
+  ];
 
 
   @override
@@ -75,14 +82,17 @@ class _MyHomePageState extends State<MyHomePage> {
         title: const Text('Scouting App'),
       ),
       body: const Center(
-        child: QuestionForm(),
+        child: QuestionForm(questions: _questions, tableName: "answers"),
       ),
     );
   }
 }
 
 class QuestionForm extends StatefulWidget {
-  const QuestionForm({Key? key}) : super(key: key);
+  final List<Question> questions;
+  final String tableName;
+
+  const QuestionForm({Key? key, required this.questions, required this.tableName}) : super(key: key);
 
   @override
   State<QuestionForm> createState() => _QuestionFormState();
@@ -95,13 +105,6 @@ class _QuestionFormState extends State<QuestionForm> {
   // Note: This is a GlobalKey<FormState>,
   // not a GlobalKey<MyCustomFormState>.
   final _formKey = GlobalKey<FormState>();
-  final List<Question> _questions = [
-    const Question(type: QuestionType.kNumber, label: "Team Number", options: []),
-    const Question(type: QuestionType.kNumber, label: "Points Scored", options: []),
-    const Question(type: QuestionType.kNumber, label: "Question 3", options: []),
-    const Question(type: QuestionType.kString, label: "Question 4", options: []),
-    const Question(type: QuestionType.kNumber, label: "Question 6", options: []),
-  ];
 
   final Map<String, dynamic> _answers = {};
 
@@ -156,10 +159,10 @@ class _QuestionFormState extends State<QuestionForm> {
         children: [
           ListView.builder(
             shrinkWrap: true,
-            itemCount: _questions.length,
+            itemCount: widget.questions.length,
               padding: const EdgeInsets.all(16.0),
               itemBuilder: (context, i) {
-                return question(_questions[i], _answers);
+                return question(widget.questions[i], _answers);
               }
               ),
           Padding(
@@ -168,9 +171,9 @@ class _QuestionFormState extends State<QuestionForm> {
               onPressed: () {
                 // Validate returns true if the form is valid, or false otherwise.
                 if (_formKey.currentState!.validate()) {
-                  SQLHelper.insertData(_questions, _answers);
+                  SQLHelper.insertData(widget.questions, _answers, widget.tableName);
                   if (kDebugMode) {
-                    print(_answers["\"" + _questions[0].label + "\"" ]);
+                    print(_answers["\"" + widget.questions[0].label + "\"" ]);
                   }
                 }
               },

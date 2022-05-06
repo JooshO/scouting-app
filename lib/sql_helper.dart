@@ -7,9 +7,9 @@ import 'dart:io';
 import 'helper_classes.dart';
 
 class SQLHelper {
-  static Future<void> createTables(Database database, List<Question> questions) async {
+  static Future<void> createTables(Database database, List<Question> questions, String table) async {
     String tableBuilder = """
-      CREATE TABLE answers(
+      CREATE TABLE """ + table + """ (
         matchNo INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
         createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     """;
@@ -31,12 +31,12 @@ class SQLHelper {
     await database.execute(tableBuilder);
   }
 
-  static Future<void> dropTable(List<Question> questions) async {
-    final db = await SQLHelper.db(questions);
+  static Future<void> dropTable(List<Question> questions, String table) async {
+    final db = await SQLHelper.db(questions, table);
     db.execute("DROP TABLE IF EXISTS answers");
   }
 
-  static Future<Database> db(List<Question> questions) async {
+  static Future<Database> db(List<Question> questions, String table) async {
     final Directory? dir = await getExternalStorageDirectory();
     if (kDebugMode) {
       print(dir?.path);
@@ -51,7 +51,7 @@ class SQLHelper {
       // When the database is first created, create a table to store dogs.
       onCreate: (db, version) {
         // Run the CREATE TABLE statement on the database.
-        return createTables(db, questions);
+        return createTables(db, questions, table);
       },
       // Set the version. This executes the onCreate function and provides a
       // path to perform database upgrades and downgrades.
@@ -61,13 +61,13 @@ class SQLHelper {
 
 
   // Define a function that inserts books into the database
-  static Future<void> insertData(List<Question> questions, Map<String, dynamic> data) async {
+  static Future<void> insertData(List<Question> questions, Map<String, dynamic> data, String table) async {
     // Get a reference to the database.
-    final db = await SQLHelper.db(questions);
+    final db = await SQLHelper.db(questions, table);
 
     // In this case, replace any previous data.
     await db.insert(
-      'answers',
+      table,
       data,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
