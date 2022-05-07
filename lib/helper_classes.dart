@@ -1,5 +1,5 @@
 enum QuestionType {
-  kNumber, kString
+  kNumber, kNumberInc, kString, kSelect, kCheckbox
 }
 
 class Question {
@@ -11,15 +11,5 @@ class Question {
     required this.type,
     required this.label,
     required this.options,
-  });
-}
-
-class Answer {
-  QuestionType type;
-  String response;
-
-  Answer({
-    required this.type,
-    required this.response,
   });
 }
