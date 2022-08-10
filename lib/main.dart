@@ -1,53 +1,29 @@
+import 'dart:convert';
 import 'dart:core';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:scouter/sql_helper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'elements.dart';
 import 'helper_classes.dart';
 
-const List<Question> generalQuestions = [
-  Question(
-      type: QuestionType.kNumber,
-      label: "Match Number",
-      options: ["PRIMARY KEY"]),
-  Question(
-      type: QuestionType.kNumber,
-      label: "Team Number",
-      options: ["PRIMARY KEY"]),
-  Question(
-      type: QuestionType.kSelect, label: "Alliance", options: ["Red", "Blue"]),
-  Question(type: QuestionType.kCheckbox, label: "Present?", options: []),
-];
+///
+/// Below are the lists of questions to be displayed on each page, in the order
+/// that they are displayed.
+List<Question> generalQuestions = [];
 
-const List<Question> autonQuestions = [
-  Question(type: QuestionType.kNumberInc, label: "Auton High Goals", options: []),
-  Question(type: QuestionType.kNumberInc, label: "Auton Low Goals", options: []),
-  Question(type: QuestionType.kCheckbox, label: "Crossed the line?", options: []),
-  Question(type: QuestionType.kNumberInc, label: "Auton Terminal intake", options: []),
-  Question(type: QuestionType.kNumberInc, label: "Auton Floor intake", options: []),
-  Question(type: QuestionType.kString, label: "Auton Fouls", options: []),
-];
+List<Question> autonQuestions = [];
 
-const List<Question> teleopQuestions = [
-  Question(type: QuestionType.kNumberInc, label: "Teleop High Goals", options: []),
-  Question(type: QuestionType.kNumberInc, label: "Teleop Low Goals", options: []),
-  Question(type: QuestionType.kNumberInc, label: "Teleop Terminal intake", options: []),
-  Question(type: QuestionType.kNumberInc, label: "Teleop Floor intake", options: []),
-  Question(type: QuestionType.kCheckbox, label: "Breakdown", options: []),
-  Question(type: QuestionType.kSelect, label: "Teleop Status", options: ["Normal", "Dead/Unresponsive","Recovered from Unresponsive", "Disabled By Official"]),
-  Question(type: QuestionType.kString, label: "Teleop Fouls", options: []),
-];
+List<Question> teleopQuestions = [];
 
-const List<Question> endgameQuestions = [
-  Question(type: QuestionType.kSelect, label: "Endgame Status", options: ["Normal", "Dead/Unresponsive","Recovered from Unresponsive", "Disabled By Official"]),
-  Question(type: QuestionType.kSelect, label: "Climb Status", options: ["Did not climb", "Low","Medium", "High", "Traverse"]),
-  Question(type: QuestionType.kCheckbox, label: "Red Card", options: []),
-  Question(type: QuestionType.kCheckbox, label: "Yellow Card", options: []),
-  Question(type: QuestionType.kString, label: "Notes", options: []),
-];
+List<Question> endgameQuestions = [];
+
+List<Question> pitQuestions = [];
 
 int matchNo = 1;
 int teamNo = -1;
@@ -57,15 +33,69 @@ void main() async {
   // Avoid errors caused by flutter upgrade.
   // Importing 'package:flutter/widgets.dart' is required.
   WidgetsFlutterBinding.ensureInitialized();
-  if(kDebugMode) {
+
+  // check our last saved json string for questions
+  final prefs = await SharedPreferences.getInstance();
+  final questionJson = prefs.getString("questions") ?? "";
+
+  Future<String> readData() async {
+    try {
+      final Directory? dir = await getExternalStorageDirectory();
+      final file = File(join(dir!.path, 'questions.json'));
+
+      // Read the file
+      return await file.readAsString();
+    } catch (e) {
+      // If encountering an error, return 0
+      if (kDebugMode) {
+        print(e.toString());
+      }
+      return "";
+    }
+  }
+
+  final newQuestions = await readData();
+  Map<String, dynamic> questions;
+  bool dropOldTables = false;
+  if (newQuestions.compareTo(questionJson) != 0) {
+    await prefs.setString("questions", newQuestions);
+    dropOldTables = true;
+    questions = jsonDecode(newQuestions);
+  } else {
+    questions = jsonDecode(questionJson);
+  }
+
+  for (dynamic question in questions["prematch"]) {
+    generalQuestions.add(Question.fromJson(question));
+  }
+
+  for (dynamic question in questions["auton"]) {
+    autonQuestions.add(Question.fromJson(question));
+  }
+
+  for (dynamic question in questions["teleop"]) {
+    teleopQuestions.add(Question.fromJson(question));
+  }
+
+  for (dynamic question in questions["endgame"]) {
+    endgameQuestions.add(Question.fromJson(question));
+  }
+
+  for (dynamic question in questions["pit"]) {
+    pitQuestions.add(Question.fromJson(question));
+  }
+
+  if (dropOldTables) {
     SQLHelper.dropTable(generalQuestions, "prematch");
     SQLHelper.dropTable(autonQuestions, "auton");
     SQLHelper.dropTable(teleopQuestions, "teleop");
     SQLHelper.dropTable(endgameQuestions, "endgame");
+    SQLHelper.dropTable(pitQuestions, "pit");
     await SQLHelper.createTables(null, generalQuestions, "prematch", false);
     await SQLHelper.createTables(null, autonQuestions, "auton", false);
     await SQLHelper.createTables(null, teleopQuestions, "teleop", false);
     await SQLHelper.createTables(null, endgameQuestions, "endgame", false);
+    await SQLHelper.createTables(null, pitQuestions, "pit", false);
   }
   runApp(const MyApp());
 }
@@ -80,15 +110,7 @@ class MyApp extends StatelessWidget {
       title: 'Scouting App',
       theme: ThemeData(
         // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.red,
       ),
       home: const MyHomePage(title: 'Scouting Home Page'),
     );
@@ -106,6 +128,8 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    const scalar = 0.05;
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
@@ -114,17 +138,133 @@ class _MyHomePageState extends State<MyHomePage> {
         title: const Text('Scouting App'),
       ),
       body: Center(
+          child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                      margin: const EdgeInsets.all(20),
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                            minimumSize: Size(width * 0.4, width * 0.2),
+                            padding: const EdgeInsets.all(16)),
+                        child: Text(
+                          "Match Scouting",
+                          style: TextStyle(
+                            fontSize: width * scalar,
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  settings:
+                                      const RouteSettings(name: "/prematch"),
+                                  builder: (context) => const PrematchPage()));
+                        },
+                      )),
+                  Container(
+                      margin: const EdgeInsets.all(20),
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                            minimumSize: Size(width * 0.4, width * 0.2),
+                            padding: const EdgeInsets.all(16)),
+                        child: Text(
+                          "Pit Scouting",
+                          style: TextStyle(
+                            fontSize: width * scalar,
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  settings: const RouteSettings(name: "/pit"),
+                                  builder: (context) => PitPage(
+                                        questions: pitQuestions,
+                                        tableName: "pit",
+                                      )));
+                        },
+                      ))
+                ],
+              ))),
+    );
+  }
+}
+
+class PitPage extends StatefulWidget {
+  final List<Question> questions;
+  final String tableName;
+
+  const PitPage({Key? key, required this.questions, required this.tableName})
+      : super(key: key);
+
+  @override
+  State<PitPage> createState() => _PitPageState();
+}
+
+// we have to do this page separately in order to not route to a normal page
+class _PitPageState extends State<PitPage> {
+  final _formKey = GlobalKey<FormState>();
+
+  final Map<String, dynamic> _answers = {"\"Team Number\"": teamNo};
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    keys.add(_formKey);
+    // Build a Form widget using the _formKey created above.
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Scouting App'),
+      ),
+      body: Center(
           child: Column(
         children: [
-          ElevatedButton(
-            child: const Text("Match Scouting"),
-            onPressed: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      settings: const RouteSettings(name: "/prematch"),
-                      builder: (context) => const PrematchPage()));
-            },
+          Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: widget.questions.length,
+                    padding: const EdgeInsets.all(16.0),
+                    itemBuilder: (context, i) {
+                      return question(widget.questions[i], _answers);
+                    }),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // Validate returns true if the form is valid, or false otherwise.
+                      if (_formKey.currentState!.validate()) {
+                        SQLHelper.insertData(
+                            widget.questions, _answers, widget.tableName);
+                        SQLHelper.review(-1, -1);
+                        teamNo = -1;
+                        for (var key in keys) {
+                          key.currentState?.reset();
+                        }
+                        keys = keys.sublist(0, 1);
+                        if (kDebugMode) {
+                          print(keys.toString());
+                        }
+                        Navigator.pop(context);
+                      }
+                    },
+                    child: Text(
+                      'Submit',
+                      style: TextStyle(
+                        fontSize: width * 0.03,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           )
         ],
       )),
@@ -181,11 +321,6 @@ class EndgamePage extends StatefulWidget {
   State<EndgamePage> createState() => _EndgamePageState();
 }
 
-// 'Auton Scouting: Team ' +
-// teamNo.toString() +
-// ', match ' +
-// matchNo.toString())
-
 class _EndgamePageState extends State<EndgamePage> {
   @override
   Widget build(BuildContext context) {
@@ -217,6 +352,8 @@ class _ReviewPageState extends State<ReviewPage> {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Review: Team ' +
@@ -227,17 +364,24 @@ class _ReviewPageState extends State<ReviewPage> {
       body: Center(
           child: Column(
         children: [
-          Expanded( child:ListView.builder(
-              itemCount: _ans.length,
-              padding: const EdgeInsets.all(16.0),
-              itemBuilder: (context, i) {
-                return ListTile(
-                  title: Text(_ans[i].key),
-                  subtitle: Text(_ans[i].value.toString()),
-                );
-              }),),
+          Expanded(
+            child: ListView.builder(
+                itemCount: _ans.length,
+                padding: const EdgeInsets.all(16.0),
+                itemBuilder: (context, i) {
+                  return ListTile(
+                    title: Text(_ans[i].key),
+                    subtitle: Text(_ans[i].value.toString()),
+                  );
+                }),
+          ),
           ElevatedButton(
-            child: const Text("Complete"),
+            child: Text(
+              "Complete",
+              style: TextStyle(
+                fontSize: width * .03,
+              ),
+            ),
             onPressed: () {
               matchNo++;
               teamNo = -1;
@@ -263,7 +407,10 @@ class QuestionForm extends StatefulWidget {
   final String next;
 
   const QuestionForm(
-      {Key? key, required this.questions, required this.tableName, required this.next})
+      {Key? key,
+      required this.questions,
+      required this.tableName,
+      required this.next})
       : super(key: key);
 
   @override
@@ -283,69 +430,9 @@ class _QuestionFormState extends State<QuestionForm> {
     "\"Team Number\"": teamNo
   };
 
-  Widget question(Question q, Map<String, dynamic> a) {
-    switch (q.type) {
-      case QuestionType.kNumber:
-        return TextFormField(
-          keyboardType: TextInputType.number,
-          inputFormatters: <TextInputFormatter>[
-            FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
-          ],
-          decoration: InputDecoration(
-            labelText: q.label,
-          ),
-          onFieldSubmitted: (String value) {
-            var num = int.parse(value);
-            a.update("\"" + q.label + "\"", (value2) => num,
-                ifAbsent: () => num);
-          },
-          onChanged: (String value) {
-            var num = int.parse(value);
-            a.update("\"" + q.label + "\"", (value2) => num,
-                ifAbsent: () => num);
-            if (q.label == "Match Number") matchNo = int.parse(value);
-            if (q.label == "Team Number") teamNo = int.parse(value);
-          },
-        );
-      case QuestionType.kNumberInc:
-        a.update("\"" + q.label + "\"", (value2) => 0, ifAbsent: () => 0);
-        return NumericStepButton(
-            minValue: 0,
-            label: q.label,
-            onChanged: (value) {
-              a.update("\"" + q.label + "\"", (value2) => value,
-                  ifAbsent: () => value);
-            });
-      case QuestionType.kCheckbox:
-        return CheckBoxStatus(label: q.label, a: a);
-    case QuestionType.kString:
-        return TextFormField(
-          // The validator receives the text that the user has entered.
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter some text';
-            }
-            return null;
-          },
-          decoration: InputDecoration(
-            labelText: q.label,
-          ),
-          onFieldSubmitted: (dynamic value) {
-            a.update("\"" + q.label + "\"", (value2) => value,
-                ifAbsent: () => value);
-          },
-          onChanged: (dynamic value) {
-            a.update("\"" + q.label + "\"", (value2) => value,
-                ifAbsent: () => value);
-          },
-        );
-      case QuestionType.kSelect:
-        return Dropdown(label: q.label, options: q.options, a: a);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
     keys.add(_formKey);
     // Build a Form widget using the _formKey created above.
     return Form(
@@ -361,7 +448,7 @@ class _QuestionFormState extends State<QuestionForm> {
                 return question(widget.questions[i], _answers);
               }),
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
+            padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
               onPressed: () {
                 // Validate returns true if the form is valid, or false otherwise.
@@ -377,16 +464,26 @@ class _QuestionFormState extends State<QuestionForm> {
                           settings: RouteSettings(name: "/" + widget.next),
                           builder: (context) {
                             switch (widget.next) {
-                              case "auton": return const AutonPage();
-                              case "teleop": return const TeleopPage();
-                              case "endgame": return const EndgamePage();
-                              case "review": return const ReviewPage();
-                              default: return const ReviewPage();
+                              case "auton":
+                                return const AutonPage();
+                              case "teleop":
+                                return const TeleopPage();
+                              case "endgame":
+                                return const EndgamePage();
+                              case "review":
+                                return const ReviewPage();
+                              default:
+                                return const ReviewPage();
                             }
                           }));
                 }
               },
-              child: const Text('Next'),
+              child: Text(
+                'Next',
+                style: TextStyle(
+                  fontSize: width * 0.03,
+                ),
+              ),
             ),
           ),
         ],
@@ -395,17 +492,21 @@ class _QuestionFormState extends State<QuestionForm> {
   }
 }
 
-Widget questionPage(List<Question> questions, String current, String next, BuildContext context) {
+Widget questionPage(List<Question> questions, String current, String next,
+    BuildContext context) {
   return Scaffold(
     appBar: AppBar(
       title: const Text('Scouting App'),
     ),
     body: Center(
         child: Column(
-          children: [
-            QuestionForm(
-                questions: questions, tableName: current, next: next,),
-          ],
-        )),
+      children: [
+        QuestionForm(
+          questions: questions,
+          tableName: current,
+          next: next,
+        ),
+      ],
+    )),
   );
 }

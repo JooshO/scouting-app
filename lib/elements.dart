@@ -2,6 +2,72 @@ import 'dart:core';
 
 import 'package:flutter/material.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
+import 'package:flutter/services.dart';
+
+import 'helper_classes.dart';
+import 'main.dart';
+
+Widget question(Question q, Map<String, dynamic> a) {
+
+  switch (q.type) {
+    case QuestionType.kNumber:
+      return Padding(padding:const EdgeInsets.all(8), child:TextFormField(
+        keyboardType: TextInputType.number,
+        inputFormatters: <TextInputFormatter>[
+          FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+        ],
+        decoration: InputDecoration(
+          labelText: q.label,
+        ),
+        onFieldSubmitted: (String value) {
+          var num = int.parse(value);
+          a.update("\"" + q.label + "\"", (value2) => num,
+              ifAbsent: () => num);
+        },
+        onChanged: (String value) {
+          var num = int.parse(value);
+          a.update("\"" + q.label + "\"", (value2) => num,
+              ifAbsent: () => num);
+          if (q.label == "Match Number") matchNo = int.parse(value);
+          if (q.label == "Team Number") teamNo = int.parse(value);
+        },
+      ));
+    case QuestionType.kNumberInc:
+      a.update("\"" + q.label + "\"", (value2) => 0, ifAbsent: () => 0);
+      return Padding(padding:const EdgeInsets.all(8), child:NumericStepButton(
+          minValue: 0,
+          label: q.label,
+          onChanged: (value) {
+            a.update("\"" + q.label + "\"", (value2) => value,
+                ifAbsent: () => value);
+          }));
+    case QuestionType.kCheckbox:
+      return Padding(padding:const EdgeInsets.all(8), child:CheckBoxStatus(label: q.label, a: a));
+    case QuestionType.kString:
+      return Padding(padding:const EdgeInsets.all(8), child:TextFormField(
+        // The validator receives the text that the user has entered.
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please enter some text';
+          }
+          return null;
+        },
+        decoration: InputDecoration(
+          labelText: q.label,
+        ),
+        onFieldSubmitted: (dynamic value) {
+          a.update("\"" + q.label + "\"", (value2) => value,
+              ifAbsent: () => value);
+        },
+        onChanged: (dynamic value) {
+          a.update("\"" + q.label + "\"", (value2) => value,
+              ifAbsent: () => value);
+        },
+      ));
+    case QuestionType.kSelect:
+      return Padding(padding:const EdgeInsets.all(8), child:Dropdown(label: q.label, options: q.options, a: a));
+  }
+}
 
 // using an example from https://pub.dev/packages/dropdown_button2
 class Dropdown extends StatefulWidget {
@@ -18,6 +84,9 @@ class _DropdownState extends State<Dropdown> {
   String? _selectedValue;
   @override
   Widget build(BuildContext context) {
+
+    final height = MediaQuery.of(context).size.height;
+
     return DropdownButtonHideUnderline(
       child: DropdownButton2(
         hint: Text(
@@ -46,7 +115,14 @@ class _DropdownState extends State<Dropdown> {
           widget.a.update("\"" + widget.label + "\"", (value2) => value,
               ifAbsent: () => value);
         },
-        buttonHeight: 40,
+        buttonHeight: height * 0.05,
+        buttonDecoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: Colors.black26,
+          ),
+        ),
+        buttonPadding: const EdgeInsets.all(8),
         buttonWidth: 140,
         itemHeight: 40,
       ),

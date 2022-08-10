@@ -54,7 +54,6 @@ class SQLHelper {
     }
     tableBuilder += pk + "))";
     if (kDebugMode) {
-      print(onCreate);
       print("Is the db open? " + database.isOpen.toString());
     }
 
@@ -68,7 +67,7 @@ class SQLHelper {
 
   static bool checkQuestions(List<Question> questions) {
     for (var q in questions) {
-      if (q.label == "\"Match Number\"" || q.label == "Team Number") return true;
+      if (q.label == "Match Number" || q.label == "Team Number") return true;
     }
     return false;
   }
@@ -80,9 +79,6 @@ class SQLHelper {
 
   static Future<Database> db(List<Question> questions, String table) async {
     final Directory? dir = await getExternalStorageDirectory();
-    if (kDebugMode) {
-      print(dir?.path);
-    }
 
     return openDatabase(
       // Set the path to the database. Note: Using the `join` function from the
@@ -109,8 +105,9 @@ class SQLHelper {
     final List<Map<String, dynamic>> answers = await db.rawQuery('SELECT prematch.*, auton.*, teleop.*, endgame.* FROM prematch JOIN auton USING ("Team Number", "Match Number") join teleop USING ("Team Number", "Match Number") join endgame USING ("Team Number", "Match Number") WHERE "Match Number"=? AND "Team Number"=?',[matchNo, teamNo]);
     if (kDebugMode) {
       print(answers.toString());
-      print(await db.rawQuery('SELECT prematch.*, auton.*, teleop.*, endgame.* FROM prematch JOIN auton USING ("Team Number", "Match Number") join teleop USING ("Team Number", "Match Number") join endgame USING ("Team Number", "Match Number")'));
     }
+
+    if (answers.isEmpty) return {};
 
     return answers[0];
   }

@@ -12,4 +12,11 @@ class Question {
     required this.label,
     required this.options,
   });
+
+  Question.fromJson(Map<String, dynamic> json)
+      : type = QuestionType.values[json['type']],
+        label = json['label'],
+        options = json['options'].cast<String>(); //map((e) => e.toString()).toList();
 }
+
+
