@@ -21,6 +21,8 @@ List<Question> teleopQuestions = [];
 List<Question> endgameQuestions = [];
 List<Question> pitQuestions = [];
 
+Map<String, Map<String, dynamic>> answersMap = {};
+
 // tracker for match number and team number for general access
 int matchNo = 1;
 int teamNo = -1;
@@ -369,11 +371,21 @@ class _ReviewPageState extends State<ReviewPage> {
                     key.currentState?.reset();
                   }
 
+                  answersMap.clear();
+
                   // remove all keys other than the first page
                   keys = keys.sublist(0, 1);
 
                   // pop back to the first match scouting page
                   Navigator.popUntil(context, ModalRoute.withName("/prematch"));
+                  Navigator.pop(context);
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          settings:
+                          const RouteSettings(name: "/prematch"),
+                          builder: (context) => const PrematchPage()));
+
                 },
               )
             ],
@@ -391,10 +403,13 @@ class QuestionForm extends StatefulWidget {
   /// the name of the page this one leads to
   final String next;
 
+  final String current;
+
   const QuestionForm(
       {Key? key,
         required this.questions,
         required this.tableName,
+        required this.current,
         required this.next})
       : super(key: key);
 
@@ -410,10 +425,19 @@ class _QuestionFormState extends State<QuestionForm> {
   // not a GlobalKey<MyCustomFormState>.
   final _formKey = GlobalKey<FormState>();
 
-  final Map<String, dynamic> _answers = {
+  Map<String, dynamic> _answers = {
     "\"Match Number\"": matchNo,
     "\"Team Number\"": teamNo
   };
+
+  @override
+  void initState() {
+    super.initState();
+    _answers = answersMap[widget.current] ?? {
+      "\"Match Number\"": matchNo,
+      "\"Team Number\"": teamNo
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -445,6 +469,7 @@ class _QuestionFormState extends State<QuestionForm> {
                   if (kDebugMode) {
                     print(_answers["\"" + widget.questions[0].label + "\""]);
                   }
+                  answersMap.update(widget.current, (value) => _answers, ifAbsent: () => _answers);
 
                   // depending on what we have selected for next, redirect to a
                   // different page
@@ -497,6 +522,7 @@ Widget questionPage(List<Question> questions, String current, String next,
           children: [
             QuestionForm(
               questions: questions,
+              current: current,
               tableName: current,
               next: next,
             ),

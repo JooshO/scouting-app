@@ -26,9 +26,8 @@ If flutter is not installed, refer to [their documentation](https://docs.flutter
  - Output answers to SQLite db file
  - db file is publicly accessible for easy export
  - pit scouting page
- - recreate tables on local json changeS
+ - recreate tables on local json changes
 
 ## TODO
- - Retain inputted values when moving backwards
- - More intelligent database design
+ - possible issue with db design - needs tableau testing
  - more testing

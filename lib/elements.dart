@@ -12,12 +12,15 @@ import 'main.dart';
 /// Takes in a question to construct from on and a map for answers mapping question text
 /// (the string) to a dynamic typed answer - could be boolean, int, string, etc.
 Widget question(Question q, Map<String, dynamic> a) {
+  var key = "\"" + q.label + "\"";
+
   switch (q.type) {
     case QuestionType.kNumber:
       return Padding(
           padding: const EdgeInsets.all(8),
           child: TextFormField(
             keyboardType: TextInputType.number,
+            initialValue: a.containsKey(key) ? a[key].toString() : null,
             inputFormatters: <TextInputFormatter>[
               FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
             ],
@@ -38,10 +41,11 @@ Widget question(Question q, Map<String, dynamic> a) {
             },
           ));
     case QuestionType.kNumberInc:
-      a.update("\"" + q.label + "\"", (value2) => 0, ifAbsent: () => 0);
       return Padding(
           padding: const EdgeInsets.all(8),
           child: NumericStepButton(
+              initValue: a.containsKey(key) ? a[key] : 0,
+              a: a,
               minValue: 0,
               label: q.label,
               onChanged: (value) {
@@ -51,12 +55,18 @@ Widget question(Question q, Map<String, dynamic> a) {
     case QuestionType.kCheckbox:
       return Padding(
           padding: const EdgeInsets.all(8),
-          child: CheckBoxStatus(label: q.label, a: a));
+          child: CheckBoxStatus(
+              label: q.label,
+              a: a,
+              initialValue: a.containsKey(key)
+                  ? a[key].toString().contains("true")
+                  : null));
     case QuestionType.kString:
       return Padding(
           padding: const EdgeInsets.all(8),
           child: TextFormField(
             // The validator receives the text that the user has entered.
+            initialValue: a.containsKey(key) ? a[key] : null,
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter some text';
@@ -78,7 +88,11 @@ Widget question(Question q, Map<String, dynamic> a) {
     case QuestionType.kSelect:
       return Padding(
           padding: const EdgeInsets.all(8),
-          child: Dropdown(label: q.label, options: q.options, a: a));
+          child: Dropdown(
+              label: q.label,
+              options: q.options,
+              a: a,
+              initialValue: a.containsKey(key) ? a[key] : null));
   }
 }
 
@@ -87,9 +101,14 @@ class Dropdown extends StatefulWidget {
   final String label;
   final List<String> options;
   final Map<String, dynamic> a;
+  final String? initialValue;
 
   const Dropdown(
-      {Key? key, required this.label, required this.options, required this.a})
+      {Key? key,
+      this.initialValue,
+      required this.label,
+      required this.options,
+      required this.a})
       : super(key: key);
 
   @override
@@ -98,6 +117,12 @@ class Dropdown extends StatefulWidget {
 
 class _DropdownState extends State<Dropdown> {
   String? _selectedValue;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedValue = widget.initialValue;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -150,7 +175,10 @@ class _DropdownState extends State<Dropdown> {
 class NumericStepButton extends StatefulWidget {
   final int minValue;
   final int maxValue;
+  final int initValue;
   final String label;
+
+  final Map<String, dynamic> a;
 
   final ValueChanged<int> onChanged;
 
@@ -158,8 +186,10 @@ class NumericStepButton extends StatefulWidget {
       {Key? key,
       this.minValue = 0,
       this.maxValue = 10,
+      required this.initValue,
       required this.label,
-      required this.onChanged})
+      required this.onChanged,
+      required this.a})
       : super(key: key);
 
   @override
@@ -169,7 +199,13 @@ class NumericStepButton extends StatefulWidget {
 }
 
 class _NumericStepButtonState extends State<NumericStepButton> {
-  int counter = 0;
+  late int counter;
+
+  @override
+  void initState() {
+    super.initState();
+    counter = widget.initValue;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -228,8 +264,10 @@ class _NumericStepButtonState extends State<NumericStepButton> {
 class CheckBoxStatus extends StatefulWidget {
   final String label;
   final Map<String, dynamic> a;
+  final bool? initialValue;
 
-  const CheckBoxStatus({Key? key, required this.label, required this.a})
+  const CheckBoxStatus(
+      {Key? key, this.initialValue, required this.label, required this.a})
       : super(key: key);
 
   @override
@@ -238,6 +276,12 @@ class CheckBoxStatus extends StatefulWidget {
 
 class _CheckBoxStatusState extends State<CheckBoxStatus> {
   var _value = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _value = widget.initialValue ?? false;
+  }
 
   @override
   Widget build(BuildContext context) {
