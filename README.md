@@ -17,7 +17,7 @@ A question is an object in an array containing:
  - deletable, id (string, int) - for the generator
 
 ## Deploy instructions
-Connect to target android tablet and run in order: `flutter build` `build\app\outputs\flutter-apk\app.apk build\app\outputs\flutter-apk\app-release.apk
+Connect to target android tablet and run in order: `flutter build` `cp build\app\outputs\flutter-apk\app.apk build\app\outputs\flutter-apk\app-release.apk
 ` `flutter install` from the home directory of this project.
 If flutter is not installed, refer to [their documentation](https://docs.flutter.dev/get-started/install) for installation instructions.
 
@@ -31,3 +31,4 @@ If flutter is not installed, refer to [their documentation](https://docs.flutter
 ## TODO
  - possible issue with db design - needs tableau testing
  - more testing
+
