@@ -1,0 +1,27 @@
+
+const List<Question> autonQuestions = [
+  Question(type: QuestionType.kNumberInc, label: "Auton High Goals", options: []),
+  Question(type: QuestionType.kNumberInc, label: "Auton Low Goals", options: []),
+  Question(type: QuestionType.kCheckbox, label: "Crossed the line?", options: []),
+  Question(type: QuestionType.kNumberInc, label: "Auton Terminal intake", options: []),
+  Question(type: QuestionType.kNumberInc, label: "Auton Floor intake", options: []),
+  Question(type: QuestionType.kString, label: "Auton Fouls", options: []),
+];
+
+const List<Question> teleopQuestions = [
+  Question(type: QuestionType.kNumberInc, label: "Teleop High Goals", options: []),
+  Question(type: QuestionType.kNumberInc, label: "Teleop Low Goals", options: []),
+  Question(type: QuestionType.kNumberInc, label: "Teleop Terminal intake", options: []),
+  Question(type: QuestionType.kNumberInc, label: "Teleop Floor intake", options: []),
+  Question(type: QuestionType.kCheckbox, label: "Breakdown", options: []),
+  Question(type: QuestionType.kSelect, label: "Teleop Status", options: ["Normal", "Dead/Unresponsive","Recovered from Unresponsive", "Disabled By Official"]),
+  Question(type: QuestionType.kString, label: "Teleop Fouls", options: []),
+];
+
+const List<Question> endgameQuestions = [
+  Question(type: QuestionType.kSelect, label: "Endgame Status", options: ["Normal", "Dead/Unresponsive","Recovered from Unresponsive", "Disabled By Official"]),
+  Question(type: QuestionType.kSelect, label: "Climb Status", options: ["Did not climb", "Low","Medium", "High", "Traverse"]),
+  Question(type: QuestionType.kCheckbox, label: "Red Card", options: []),
+  Question(type: QuestionType.kCheckbox, label: "Yellow Card", options: []),
+  Question(type: QuestionType.kString, label: "Notes", options: []),
+];

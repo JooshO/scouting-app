@@ -1,0 +1,92 @@
+{
+  "prematch": [
+    {
+      "label": "Team Number",
+      "type": 0,
+      "section": "prematch",
+      "options": ["PRIMARY KEY"],
+      "deletable": false,
+      "id": 0
+    },
+    {
+      "label": "Match Number",
+      "type": 0,
+      "section": "prematch",
+      "options": ["PRIMARY KEY"],
+      "deletable": false,
+      "id": 1
+    },
+    {
+      "label": "Present",
+      "type": 4,
+      "section": "prematch",
+      "options": [""],
+      "deletable": true,
+      "id": 2
+    }
+  ],
+  "auton": [
+    {
+      "label": "Crossed Line",
+      "type": 4,
+      "section": "endgame",
+      "options": [""],
+      "deletable": true,
+      "id": 6
+    },
+    {
+      "label": "Goals Scored Auton",
+      "type": 1,
+      "section": "prematch",
+      "options": [""],
+      "deletable": true,
+      "id": 3
+    }
+  ],
+  "teleop": [
+    {
+      "label": "Goals Scored Teleop",
+      "type": 1,
+      "section": "prematch",
+      "options": [""],
+      "deletable": true,
+      "id": 4
+    }
+  ],
+  "endgame": [
+    {
+      "label": "Climb Status",
+      "type": 3,
+      "section": "endgame",
+      "options": ["Low", " Mid", " High"],
+      "deletable": true,
+      "id": 5
+    }
+  ],
+  "pit": [
+    {
+      "label": "Team Number",
+      "type": 0,
+      "section": "pit",
+      "options": ["PRIMARY KEY"],
+      "deletable": false,
+      "id": 93
+    },
+    {
+      "label": "Present",
+      "type": 4,
+      "section": "pit",
+      "options": [""],
+      "deletable": true,
+      "id": 2
+    },
+    {
+      "label": "Weight",
+      "type": 0,
+      "section": "pit",
+      "options": [""],
+      "deletable": true,
+      "id": 2
+    }
+  ]
+}

@@ -7,65 +7,78 @@ import 'package:flutter/services.dart';
 import 'helper_classes.dart';
 import 'main.dart';
 
+/// A widget that contains a question and the ability to answer it depending on
+/// the type of question, constructed this way for modularity.
+/// Takes in a question to construct from on and a map for answers mapping question text
+/// (the string) to a dynamic typed answer - could be boolean, int, string, etc.
 Widget question(Question q, Map<String, dynamic> a) {
-
   switch (q.type) {
     case QuestionType.kNumber:
-      return Padding(padding:const EdgeInsets.all(8), child:TextFormField(
-        keyboardType: TextInputType.number,
-        inputFormatters: <TextInputFormatter>[
-          FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
-        ],
-        decoration: InputDecoration(
-          labelText: q.label,
-        ),
-        onFieldSubmitted: (String value) {
-          var num = int.parse(value);
-          a.update("\"" + q.label + "\"", (value2) => num,
-              ifAbsent: () => num);
-        },
-        onChanged: (String value) {
-          var num = int.parse(value);
-          a.update("\"" + q.label + "\"", (value2) => num,
-              ifAbsent: () => num);
-          if (q.label == "Match Number") matchNo = int.parse(value);
-          if (q.label == "Team Number") teamNo = int.parse(value);
-        },
-      ));
+      return Padding(
+          padding: const EdgeInsets.all(8),
+          child: TextFormField(
+            keyboardType: TextInputType.number,
+            inputFormatters: <TextInputFormatter>[
+              FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+            ],
+            decoration: InputDecoration(
+              labelText: q.label,
+            ),
+            onFieldSubmitted: (String value) {
+              var num = int.parse(value);
+              a.update("\"" + q.label + "\"", (value2) => num,
+                  ifAbsent: () => num);
+            },
+            onChanged: (String value) {
+              var num = int.parse(value);
+              a.update("\"" + q.label + "\"", (value2) => num,
+                  ifAbsent: () => num);
+              if (q.label == "Match Number") matchNo = int.parse(value);
+              if (q.label == "Team Number") teamNo = int.parse(value);
+            },
+          ));
     case QuestionType.kNumberInc:
       a.update("\"" + q.label + "\"", (value2) => 0, ifAbsent: () => 0);
-      return Padding(padding:const EdgeInsets.all(8), child:NumericStepButton(
-          minValue: 0,
-          label: q.label,
-          onChanged: (value) {
-            a.update("\"" + q.label + "\"", (value2) => value,
-                ifAbsent: () => value);
-          }));
+      return Padding(
+          padding: const EdgeInsets.all(8),
+          child: NumericStepButton(
+              minValue: 0,
+              label: q.label,
+              onChanged: (value) {
+                a.update("\"" + q.label + "\"", (value2) => value,
+                    ifAbsent: () => value);
+              }));
     case QuestionType.kCheckbox:
-      return Padding(padding:const EdgeInsets.all(8), child:CheckBoxStatus(label: q.label, a: a));
+      return Padding(
+          padding: const EdgeInsets.all(8),
+          child: CheckBoxStatus(label: q.label, a: a));
     case QuestionType.kString:
-      return Padding(padding:const EdgeInsets.all(8), child:TextFormField(
-        // The validator receives the text that the user has entered.
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return 'Please enter some text';
-          }
-          return null;
-        },
-        decoration: InputDecoration(
-          labelText: q.label,
-        ),
-        onFieldSubmitted: (dynamic value) {
-          a.update("\"" + q.label + "\"", (value2) => value,
-              ifAbsent: () => value);
-        },
-        onChanged: (dynamic value) {
-          a.update("\"" + q.label + "\"", (value2) => value,
-              ifAbsent: () => value);
-        },
-      ));
+      return Padding(
+          padding: const EdgeInsets.all(8),
+          child: TextFormField(
+            // The validator receives the text that the user has entered.
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter some text';
+              }
+              return null;
+            },
+            decoration: InputDecoration(
+              labelText: q.label,
+            ),
+            onFieldSubmitted: (dynamic value) {
+              a.update("\"" + q.label + "\"", (value2) => value,
+                  ifAbsent: () => value);
+            },
+            onChanged: (dynamic value) {
+              a.update("\"" + q.label + "\"", (value2) => value,
+                  ifAbsent: () => value);
+            },
+          ));
     case QuestionType.kSelect:
-      return Padding(padding:const EdgeInsets.all(8), child:Dropdown(label: q.label, options: q.options, a: a));
+      return Padding(
+          padding: const EdgeInsets.all(8),
+          child: Dropdown(label: q.label, options: q.options, a: a));
   }
 }
 
@@ -74,7 +87,10 @@ class Dropdown extends StatefulWidget {
   final String label;
   final List<String> options;
   final Map<String, dynamic> a;
-  const Dropdown({Key? key, required this.label, required this.options, required this.a}) : super(key: key);
+
+  const Dropdown(
+      {Key? key, required this.label, required this.options, required this.a})
+      : super(key: key);
 
   @override
   State<Dropdown> createState() => _DropdownState();
@@ -82,9 +98,9 @@ class Dropdown extends StatefulWidget {
 
 class _DropdownState extends State<Dropdown> {
   String? _selectedValue;
+
   @override
   Widget build(BuildContext context) {
-
     final height = MediaQuery.of(context).size.height;
 
     return DropdownButtonHideUnderline(
@@ -98,14 +114,14 @@ class _DropdownState extends State<Dropdown> {
         ),
         items: widget.options
             .map((item) => DropdownMenuItem<String>(
-          value: item,
-          child: Text(
-            item,
-            style: const TextStyle(
-              fontSize: 14,
-            ),
-          ),
-        ))
+                  value: item,
+                  child: Text(
+                    item,
+                    style: const TextStyle(
+                      fontSize: 14,
+                    ),
+                  ),
+                ))
             .toList(),
         value: _selectedValue,
         onChanged: (value) {
@@ -140,10 +156,10 @@ class NumericStepButton extends StatefulWidget {
 
   const NumericStepButton(
       {Key? key,
-        this.minValue = 0,
-        this.maxValue = 10,
-        required this.label,
-        required this.onChanged})
+      this.minValue = 0,
+      this.maxValue = 10,
+      required this.label,
+      required this.onChanged})
       : super(key: key);
 
   @override
@@ -213,7 +229,8 @@ class CheckBoxStatus extends StatefulWidget {
   final String label;
   final Map<String, dynamic> a;
 
-  const CheckBoxStatus({Key? key, required this.label, required this.a}) : super(key: key);
+  const CheckBoxStatus({Key? key, required this.label, required this.a})
+      : super(key: key);
 
   @override
   State<CheckBoxStatus> createState() => _CheckBoxStatusState();
@@ -226,19 +243,25 @@ class _CheckBoxStatusState extends State<CheckBoxStatus> {
   Widget build(BuildContext context) {
     widget.a.update("\"" + widget.label + "\"", (value2) => _value.toString(),
         ifAbsent: () => _value.toString());
-    return  Row(
-        children: <Widget>[
-          const SizedBox(width: 10,),
-          Text(widget.label + ": " ,style: const TextStyle(fontSize: 17.0), ),
-          Checkbox(
-            value: _value,
-            onChanged: (bool? value) {
-              widget.a.update("\"" + widget.label + "\"", (value2) => value.toString(),
-                  ifAbsent: () => value.toString());
-              setState(() {
-                _value = value!;
-              });
-            },
-          ),]);
+    return Row(children: <Widget>[
+      const SizedBox(
+        width: 10,
+      ),
+      Text(
+        widget.label + ": ",
+        style: const TextStyle(fontSize: 17.0),
+      ),
+      Checkbox(
+        value: _value,
+        onChanged: (bool? value) {
+          widget.a.update(
+              "\"" + widget.label + "\"", (value2) => value.toString(),
+              ifAbsent: () => value.toString());
+          setState(() {
+            _value = value!;
+          });
+        },
+      ),
+    ]);
   }
 }

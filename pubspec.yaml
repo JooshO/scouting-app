@@ -32,9 +32,11 @@ dependencies:
   sqflite:
   path:
   provider: ^6.0.0
+  external_path:
   path_provider: ^2.0.9
   dropdown_button2: ^1.4.0
   shared_preferences: ^2.0.15
+  permission_handler: ^10.2.0
 
 
   # The following adds the Cupertino Icons font to your application.
