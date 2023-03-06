@@ -41,6 +41,8 @@ Widget question(Question q, Map<String, dynamic> a) {
             },
           ));
     case QuestionType.kNumberInc:
+      a.update("\"" + q.label + "\"", (value2) => value2,
+          ifAbsent: () => 0);
       return Padding(
           padding: const EdgeInsets.all(8),
           child: NumericStepButton(
